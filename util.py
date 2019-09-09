@@ -23,31 +23,31 @@ def padronize_column(names_list, dataframes, colunabase, colunanova=None):
     return
 
 
-def pareamentoself(dataframebase, dataframesecundario, colunas):
-    duplicata = []
+def pareamentoself(dataframebase, colunas, highest_only = False):
 
-    dataframebase['KEY'] = reduce(lambda a,b: a+b,[dataframebase[coluna] for coluna in colunas])
-    dataframesecundario['KEY'] = reduce(lambda a, b: a + b, [dataframesecundario[coluna] for coluna in colunas])
-    size = len(dataframebase)
+    dataframebase['KEY'] = reduce(lambda a, b: a+b, [dataframebase[coluna] for coluna in colunas])
+    size = 5000
     perc = 0
-    for s,(i, line) in enumerate(dataframebase.iterrows()):
-        if i in duplicata:
-            continue
-        for i2, line2 in dataframesecundario.iterrows():
-            jaro_value = distance.get_jaro_distance(line['KEY'], line2['KEY'])
-            if jaro_value > 0.95:
-                if line['ID'] == line2['ID']:
-                    continue
-                duplicata.append(i2)
-                print(line['KEY'], line2['KEY'])
+    valor_match = 0.85
+    matches = {}
+    for i, line in dataframebase.iterrows():
+        highest_match = 0
+        highest_match_name = None
+        for key in matches.keys():
+            jaro_value = distance.get_jaro_distance(line['KEY'], key)
+            if jaro_value > valor_match:  # deu match
+                if not highest_only:
+                    matches[key].append(line['KEY'])
+                elif jaro_value > highest_match:
+                    highest_match = jaro_value
+                    highest_match_name = key
+        if highest_match_name is not None:
+            matches[highest_match_name].append(line['KEY'])
+        else:
+            matches[line['KEY']] = []
 
-        if s/size*100 > perc:
+        if i/size*100 > perc:
             print(perc, '%')
             perc += 1
 
-    dataframebase.drop(duplicata, axis=0, inplace=True)
-    return
-
-
-
-
+    return matches
