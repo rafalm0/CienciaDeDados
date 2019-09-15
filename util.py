@@ -23,35 +23,43 @@ def padronize_column(names_list, dataframes, colunabase, colunanova=None):
     return
 
 
-def pareamento(dataframebase, dataframepareando, colunas, highest_only = False, valor_match = 0.89):
-
+def pareamento(dataframebase, dataframepareando, colunas,pathbasesaida,pathpareandosaida, valor_match = 0.89):
     dataframebase['KEY'] = reduce(lambda a, b: a+b, [dataframebase[coluna] for coluna in colunas])
     dataframepareando['KEY'] = reduce(lambda a, b: a + b, [dataframepareando[coluna] for coluna in colunas])
+    # id_unicos = []
+    # for i, line in dataframebase.iterrows():
+    #     id_unicos.append(i)
+    #     dataframebase['ID_unico'] = id_unicos
+    # new = id_unicos[-1]
+    if not 'ID_UNICO' in dataframebase.columns:
+        dataframebase['ID_UNICO'] = range(0, len(dataframebase))
     size = len(dataframebase)
+    x = size
+    id_unicos = []
     perc = 0
     matches = {}
-    id_key = {}
-    for i, line in dataframebase.iterrows():
-        id_key[line['KEY']] = line['ID']
-        highest_match = 0
-        highest_match_name = None
-        for j, line2 in dataframepareando.iterrows():
-            id_key[line2['KEY']] = line['ID']
-
+    usados = []
+    for j, line2 in dataframepareando.iterrows():
+        for i, line in dataframebase.iterrows():
             jaro_value = distance.get_jaro_distance(line['KEY'], line2['KEY'])
-            if jaro_value > valor_match:  # deu match
-                if not highest_only:
-                    matches[line['KEY']].append([jaro_value, line2['KEY']])
-                elif jaro_value > highest_match:
-                    highest_match = jaro_value
-                    highest_match_name = line2['KEY']
-        if highest_match_name is not None:
-            matches[line['KEY']].append([highest_match, highest_match_name])
-        if i/size*100 > perc:
+            if (jaro_value > valor_match) and (i not in usados):
+                if line2['ID'] not in matches:
+                    matches[line2['ID']] = []
+                matches[line2['ID']].append([jaro_value, line['ID_UNICO']])
+        if line2['ID'] not in matches.keys():
+            id_unicos.append(size)
+            size += 1
+        else:
+            g = sorted(matches[line2['ID']],key = lambda a:a[0])[0][1]
+            id_unicos.append(g)
+            usados.append(g)
+        if j/size*100 > perc:
             print(perc, '%')
             perc += 1
-
-    return matches, id_key
+    dataframepareando['ID_UNICO'] = id_unicos
+    dataframepareando.to_csv(pathpareandosaida)
+    dataframebase.to_csv(pathbasesaida)
+    return
 
 
 def pareamentoself(dataframebase, colunas, highest_only = False, valor_match = 0.89):
