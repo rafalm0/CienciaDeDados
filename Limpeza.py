@@ -1,6 +1,7 @@
 import pandas as pd
 from pyjarowinkler import distance
 import util
+import pickle
 import os
 
 dfAlunos = pd.read_csv('Data/Base de Alunos0.csv', sep=';')
@@ -26,10 +27,18 @@ dfAlunos.to_csv('Data/Limpesa1/Base de Alunos1.csv', index=False, encoding='utf-
 dfOnibus.to_csv('Data/Limpesa1/Base de Onibus1.csv', index=False, encoding='utf-8')
 dfDengue.to_csv('Data/Limpesa1/Base de Dengue1.csv', index=False, encoding='utf-8')
 
-# colunas_pareamento = ['Nome', 'Nome da Mae', 'Nome do Pai', 'Sexo', 'Bairro', 'Data de Nascimento']
-# util.pareamentoself(dfAlunos, dfOnibus, colunas_pareamento)
-# util.pareamentoself(dfOnibus, dfOnibus, colunas_pareamento)
-# util.pareamentoself(dfDengue, dfOnibus, colunas_pareamento)
+colunas_pareamento = ['Nome', 'Nome da Mae', 'Nome do Pai', 'Sexo', 'Bairro', 'Data de Nascimento']
+Alunos_pareamento, id_chave_alunos = util.pareamentoself(dfAlunos, colunas_pareamento,0.86)
+Onibus_pareamento, id_chave_onibus = util.pareamentoself(dfOnibus, colunas_pareamento,0.86)
+Dengue_pareamento, id_chave_dengue = util.pareamentoself(dfDengue, colunas_pareamento,0.86)
+
+pickle.dump(Alunos_pareamento,open('Data/pareamento_aluno_86.pickle', 'wb'), protocol = pickle.HIGHEST_PROTOCOL)
+pickle.dump(Onibus_pareamento,open('Data/pareamento_onibus_86.pickle', 'wb'), protocol = pickle.HIGHEST_PROTOCOL)
+pickle.dump(Dengue_pareamento,open('Data/pareamento_dengue_86.pickle', 'wb'), protocol = pickle.HIGHEST_PROTOCOL)
+
+pickle.dump(id_chave_dengue,open('Data/pareamento_aluno_id_key_86.pickle', 'wb'), protocol = pickle.HIGHEST_PROTOCOL)
+pickle.dump(id_chave_alunos,open('Data/pareamento_onibus_id_key_86.pickle', 'wb'), protocol = pickle.HIGHEST_PROTOCOL)
+pickle.dump(id_chave_onibus,open('Data/pareamento_dengue_id_key_86.pickle', 'wb'), protocol = pickle.HIGHEST_PROTOCOL)
 
 # util.pareamentoself(dfAlunos, dfAlunos, colunas_pareamento)
 # dfAlunos.to_csv('Base de Alunos2.csv', index=False, encoding='utf-8')

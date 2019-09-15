@@ -23,14 +23,46 @@ def padronize_column(names_list, dataframes, colunabase, colunanova=None):
     return
 
 
-def pareamentoself(dataframebase, colunas, highest_only = False):
+def pareamento(dataframebase, dataframepareando, colunas, highest_only = False, valor_match = 0.89):
 
     dataframebase['KEY'] = reduce(lambda a, b: a+b, [dataframebase[coluna] for coluna in colunas])
-    size = 5000
+    dataframepareando['KEY'] = reduce(lambda a, b: a + b, [dataframepareando[coluna] for coluna in colunas])
+    size = len(dataframebase)
     perc = 0
-    valor_match = 0.85
     matches = {}
+    id_key = {}
     for i, line in dataframebase.iterrows():
+        id_key[line['KEY']] = line['ID']
+        highest_match = 0
+        highest_match_name = None
+        for j, line2 in dataframepareando.iterrows():
+            id_key[line2['KEY']] = line['ID']
+
+            jaro_value = distance.get_jaro_distance(line['KEY'], line2['KEY'])
+            if jaro_value > valor_match:  # deu match
+                if not highest_only:
+                    matches[line['KEY']].append([jaro_value, line2['KEY']])
+                elif jaro_value > highest_match:
+                    highest_match = jaro_value
+                    highest_match_name = line2['KEY']
+        if highest_match_name is not None:
+            matches[line['KEY']].append([highest_match, highest_match_name])
+        if i/size*100 > perc:
+            print(perc, '%')
+            perc += 1
+
+    return matches, id_key
+
+
+def pareamentoself(dataframebase, colunas, highest_only = False, valor_match = 0.89):
+
+    dataframebase['KEY'] = reduce(lambda a, b: a+b, [dataframebase[coluna] for coluna in colunas])
+    size = len(dataframebase)
+    perc = 0
+    matches = {}
+    id_key = {}
+    for i, line in dataframebase.iterrows():
+        id_key[line['KEY']] = line['ID']
         highest_match = 0
         highest_match_name = None
         for key in matches.keys():
@@ -50,4 +82,6 @@ def pareamentoself(dataframebase, colunas, highest_only = False):
             print(perc, '%')
             perc += 1
 
-    return matches
+    return matches, id_key
+
+
